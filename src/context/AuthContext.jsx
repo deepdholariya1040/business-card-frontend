@@ -31,11 +31,17 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const loadCurrentUser = useCallback(async () => {
-    const currentUser = await fetchCurrentUser();
-    setUser(currentUser);
-    setStatus("authenticated");
-    return currentUser;
-  }, []);
+  console.log("Calling /auth/me...");
+
+  const currentUser = await fetchCurrentUser();
+
+  console.log("User loaded:", currentUser);
+
+  setUser(currentUser);
+  setStatus("authenticated");
+
+  return currentUser;
+}, []);
 
   useEffect(() => {
     if (bootstrapped.current) return;
@@ -46,7 +52,11 @@ export const AuthProvider = ({ children }) => {
 
       // Google OAuth callback
       if (hash?.startsWith("#token=")) {
+        console.log("Google callback detected");
+
         const token = decodeURIComponent(hash.replace("#token=", ""));
+
+        console.log("Access Token:", token);
 
         setAccessToken(token);
         localStorage.setItem("accessToken", token);
@@ -58,9 +68,18 @@ export const AuthProvider = ({ children }) => {
         );
 
         try {
-          await loadCurrentUser();
+          const user = await loadCurrentUser();
+
+          console.log("Current User:", user);
+
           return;
-        } catch {
+        } catch (error) {
+          console.error(
+            "loadCurrentUser failed:",
+            error?.response?.status,
+            error?.response?.data || error.message,
+          );
+
           clearAuth();
           return;
         }
@@ -141,20 +160,14 @@ export const AuthProvider = ({ children }) => {
     refreshUser,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuthContext = () => {
   const ctx = useContext(AuthContext);
 
   if (!ctx) {
-    throw new Error(
-      "useAuthContext must be used within AuthProvider",
-    );
+    throw new Error("useAuthContext must be used within AuthProvider");
   }
 
   return ctx;

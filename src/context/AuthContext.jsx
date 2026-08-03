@@ -1,4 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import {
   setAccessToken,
@@ -18,6 +25,7 @@ export const AuthProvider = ({ children }) => {
 
   const clearAuth = useCallback(() => {
     setAccessToken(null);
+    localStorage.removeItem("accessToken");
     setUser(null);
     setStatus("unauthenticated");
   }, []);
@@ -29,15 +37,6 @@ export const AuthProvider = ({ children }) => {
     return currentUser;
   }, []);
 
-  // Called once, on first mount:
-  // 1. If the Google OAuth callback just redirected here with
-  //    `#token=<accessToken>` in the URL (see auth.controller.js's
-  //    googleCallback, which always redirects to
-  //    http://localhost:5173/#token=... after setting the refresh
-  //    cookie), consume it immediately.
-  // 2. Otherwise, attempt a silent refresh using the httpOnly
-  //    refreshToken cookie (if the user has a still-valid session
-  //    from a previous visit).
   useEffect(() => {
     if (bootstrapped.current) return;
     bootstrapped.current = true;
@@ -45,11 +44,18 @@ export const AuthProvider = ({ children }) => {
     const bootstrap = async () => {
       const hash = window.location.hash;
 
+      // Google OAuth callback
       if (hash?.startsWith("#token=")) {
         const token = decodeURIComponent(hash.replace("#token=", ""));
+
         setAccessToken(token);
-        // Remove the token from the URL bar immediately.
-        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        localStorage.setItem("accessToken", token);
+
+        window.history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search,
+        );
 
         try {
           await loadCurrentUser();
@@ -60,10 +66,34 @@ export const AuthProvider = ({ children }) => {
         }
       }
 
+      // Try localStorage first
+      const storedToken = localStorage.getItem("accessToken");
+
+      if (storedToken) {
+        try {
+          setAccessToken(storedToken);
+          await loadCurrentUser();
+          return;
+        } catch {
+          localStorage.removeItem("accessToken");
+          setAccessToken(null);
+        }
+      }
+
+      // Fallback to refresh cookie
       try {
-        await refreshAccessToken();
+        const token = await refreshAccessToken();
+
+        setAccessToken(token);
+        localStorage.setItem("accessToken", token);
+
         await loadCurrentUser();
-      } catch {
+      } catch (error) {
+        console.log(
+          "AUTH BOOTSTRAP FAILED",
+          error?.response?.data || error.message,
+        );
+
         clearAuth();
       }
     };
@@ -78,10 +108,10 @@ export const AuthProvider = ({ children }) => {
     });
   }, [clearAuth]);
 
-  // Used after Email OTP register/login verify, which return
-  // { user, accessToken } directly in the response body.
   const applySession = useCallback((sessionUser, accessToken) => {
     setAccessToken(accessToken);
+    localStorage.setItem("accessToken", accessToken);
+
     setUser(sessionUser);
     setStatus("authenticated");
   }, []);
@@ -90,8 +120,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await logoutRequest();
     } catch {
-      // Even if the network call fails, clear local state so the UI
-      // is never stuck showing a logged-in shell.
+      // Ignore network errors
     } finally {
       clearAuth();
     }
@@ -112,11 +141,21 @@ export const AuthProvider = ({ children }) => {
     refreshUser,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuthContext = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuthContext must be used within AuthProvider");
+
+  if (!ctx) {
+    throw new Error(
+      "useAuthContext must be used within AuthProvider",
+    );
+  }
+
   return ctx;
 };

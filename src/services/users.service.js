@@ -24,6 +24,10 @@ export const fetchUserCards = (id) =>
 export const createUser = (payload) =>
   api.post("/users", payload).then((r) => r.data);
 
+// POST /users/super-admin
+export const createSuperAdmin = (payload) =>
+  api.post("/users/super-admin", payload).then((r) => r.data.data);
+
 // PUT /users/:id
 export const updateUser = (id, payload) =>
   api.put(`/users/${id}`, payload).then((r) => r.data);

@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Search, ShieldCheck } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Search, ShieldCheck, Plus } from "lucide-react";
 
-import { fetchSuperAdmins } from "../../services/users.service.js";
+import { fetchSuperAdmins, createSuperAdmin } from "../../services/users.service.js";
 import { useDebounce } from "../../hooks/useDebounce.js";
 import { usePagination } from "../../hooks/usePagination.js";
 import { roleLabel } from "../../config/roles.js";
 
 import Card from "../../components/ui/Card.jsx";
-import { Input } from "../../components/ui/Input.jsx";
 import Button from "../../components/ui/Button.jsx";
+import { Input } from "../../components/ui/Input.jsx";
 import Avatar from "../../components/ui/Avatar.jsx";
 import { RoleBadge } from "../../components/ui/Badge.jsx";
 import { PageLoader } from "../../components/ui/Spinner.jsx";
@@ -20,8 +20,13 @@ import {
 } from "../../components/ui/EmptyState.jsx";
 import Pagination from "../../components/ui/Pagination.jsx";
 
+import AddSuperAdminModal from "./AddSuperAdminModal.jsx";
+
 export default function SuperAdminsListPage() {
   const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const debouncedSearch = useDebounce(search);
 
@@ -40,8 +45,27 @@ export default function SuperAdminsListPage() {
   const { pageItems, page, setPage, totalPages, total } =
     usePagination(filtered, 10);
 
+  const handleCreateSuperAdmin = async (formData) => {
+    try {
+      await createSuperAdmin(formData);
+
+      queryClient.invalidateQueries({
+        queryKey: ["super-admins"],
+      });
+
+      setOpen(false);
+    } catch (error) {
+      console.error(error);
+      alert(
+        error?.response?.data?.message ||
+          "Failed to create Super Admin."
+      );
+    }
+  };
+
   return (
     <div className="space-y-5">
+      {/* Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h2 className="font-display text-2xl font-bold text-ink-900">
@@ -52,8 +76,17 @@ export default function SuperAdminsListPage() {
             Manage all Super Admin accounts on the platform.
           </p>
         </div>
+
+        <Button
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Add Super Admin
+        </Button>
       </div>
 
+      {/* Search */}
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-300" />
 
@@ -65,6 +98,7 @@ export default function SuperAdminsListPage() {
         />
       </div>
 
+      {/* List */}
       <Card>
         {isLoading ? (
           <PageLoader label="Loading Super Admins..." />
@@ -144,6 +178,12 @@ export default function SuperAdminsListPage() {
           </>
         )}
       </Card>
+
+      <AddSuperAdminModal
+        open={open}
+        onClose={() => setOpen(false)}
+        onSubmit={handleCreateSuperAdmin}
+      />
     </div>
   );
 }

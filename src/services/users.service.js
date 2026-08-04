@@ -4,6 +4,10 @@ import api from "../lib/axios.js";
 export const fetchUsers = () =>
   api.get("/users").then((r) => r.data.data);
 
+// GET /users/super-admins
+export const fetchSuperAdmins = () =>
+  api.get("/users/super-admins").then((r) => r.data.data);
+
 // GET /users/company-users
 export const fetchCompanyUsers = (params = {}) =>
   api.get("/users/company-users", { params }).then((r) => r.data.data);

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Users as UsersIcon } from "lucide-react";
+import { Search, ShieldCheck } from "lucide-react";
 
-import { fetchUsers } from "../../services/users.service.js";
+import { fetchSuperAdmins } from "../../services/users.service.js";
 import { useDebounce } from "../../hooks/useDebounce.js";
 import { usePagination } from "../../hooks/usePagination.js";
 import { roleLabel } from "../../config/roles.js";
@@ -20,14 +20,14 @@ import {
 } from "../../components/ui/EmptyState.jsx";
 import Pagination from "../../components/ui/Pagination.jsx";
 
-export default function UsersListPage() {
+export default function SuperAdminsListPage() {
   const [search, setSearch] = useState("");
 
   const debouncedSearch = useDebounce(search);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["users"],
-    queryFn: fetchUsers,
+    queryKey: ["super-admins"],
+    queryFn: fetchSuperAdmins,
   });
 
   const filtered = (data || []).filter(
@@ -45,11 +45,11 @@ export default function UsersListPage() {
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h2 className="font-display text-2xl font-bold text-ink-900">
-            Users
+            Super Admins
           </h2>
 
           <p className="mt-1 text-sm text-ink-400">
-            Directory of normal (unaffiliated) user accounts on the platform.
+            Manage all Super Admin accounts on the platform.
           </p>
         </div>
       </div>
@@ -67,14 +67,14 @@ export default function UsersListPage() {
 
       <Card>
         {isLoading ? (
-          <PageLoader label="Loading users..." />
+          <PageLoader label="Loading Super Admins..." />
         ) : isError ? (
-          <ErrorState description="We couldn't load users." />
+          <ErrorState description="We couldn't load Super Admins." />
         ) : total === 0 ? (
           <EmptyState
-            icon={UsersIcon}
-            title="No users found."
-            description="No normal user accounts match your search."
+            icon={ShieldCheck}
+            title="No Super Admins found."
+            description="No Super Admin accounts match your search."
           />
         ) : (
           <>

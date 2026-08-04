@@ -47,10 +47,27 @@ export const userEditSchema = z.object({
 
 export const companyCreateSchema = z.object({
   name: z.string().trim().min(1, "Company name is required."),
+
+  mainAdminName: z
+    .string()
+    .trim()
+    .min(1, "Main Admin name is required."),
+
   mainAdminEmail: emailSchema,
+
   maxCompanyAdmins: z.coerce.number().int().min(1).optional(),
+
   maxStaff: z.coerce.number().int().min(1).optional(),
-  expiryDate: z.string().min(1, "Subscription expiry date is required."),
+
+  dailyLimit: z.coerce.number().int().min(1),
+
+  monthlyLimit: z.coerce.number().int().min(1),
+
+  yearlyLimit: z.coerce.number().int().min(1),
+
+  expiryDate: z
+    .string()
+    .min(1, "Subscription expiry date is required."),
 });
 
 export const companyEditSchema = z.object({

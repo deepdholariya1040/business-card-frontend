@@ -17,7 +17,11 @@ export default function CompanyCreatePage() {
   const toast = useToast();
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
     resolver: zodResolver(companyCreateSchema),
   });
 
@@ -25,30 +29,45 @@ export default function CompanyCreatePage() {
     mutationFn: (values) =>
       createCompany({
         name: values.name,
+        mainAdminName: values.mainAdminName,
         mainAdminEmail: values.mainAdminEmail,
         maxCompanyAdmins: values.maxCompanyAdmins || undefined,
         maxStaff: values.maxStaff || undefined,
-        subscription: { expiryDate: values.expiryDate },
+
+        scanLimits: {
+          daily: Number(values.dailyLimit || 25),
+          monthly: Number(values.monthlyLimit || 500),
+          yearly: Number(values.yearlyLimit || 5000),
+        },
+
+        subscription: {
+          expiryDate: values.expiryDate,
+        },
       }),
+
     onSuccess: (res) => {
       toast.success(res.message || "Company created.");
       queryClient.invalidateQueries({ queryKey: ["companies"] });
       queryClient.invalidateQueries({ queryKey: ["companies-search"] });
       navigate(`/companies/${res.data._id}`);
     },
+
     onError: (err) => toast.error(getErrorMessage(err)),
   });
 
   return (
     <div className="mx-auto max-w-xl space-y-5">
-      <Link to="/companies" className="flex items-center gap-1.5 text-sm font-medium text-ink-500 hover:text-ink-800">
+      <Link
+        to="/companies"
+        className="flex items-center gap-1.5 text-sm font-medium text-ink-500 hover:text-ink-800"
+      >
         <ArrowLeft className="h-4 w-4" /> Back to companies
       </Link>
 
       <Card>
         <CardHeader
           title="Onboard a new company"
-          subtitle="The Main Admin's email must already belong to a registered user account."
+          subtitle="Enter the Main Admin details. The account will be created automatically."
         />
         <form onSubmit={handleSubmit((v) => mutation.mutate(v))}>
           <CardBody className="space-y-4">
@@ -56,28 +75,106 @@ export default function CompanyCreatePage() {
               <Input placeholder="Acme Corporation" {...register("name")} />
             </Field>
             <Field
+              label="Main Admin Name"
+              error={errors.mainAdminName?.message}
+              required
+            >
+              <Input placeholder="John Doe" {...register("mainAdminName")} />
+            </Field>
+            <Field
               label="Main Admin email"
               error={errors.mainAdminEmail?.message}
               required
               hint="This user will be promoted to Main Company Admin."
             >
-              <Input type="email" placeholder="admin@acme.com" {...register("mainAdminEmail")} />
+              <Input
+                type="email"
+                placeholder="admin@acme.com"
+                {...register("mainAdminEmail")}
+              />
             </Field>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Max company admins" error={errors.maxCompanyAdmins?.message} hint="Default: 5">
-                <Input type="number" min={1} placeholder="5" {...register("maxCompanyAdmins")} />
+              <Field
+                label="Max company admins"
+                error={errors.maxCompanyAdmins?.message}
+                hint="Default: 5"
+              >
+                <Input
+                  type="number"
+                  min={1}
+                  placeholder="5"
+                  {...register("maxCompanyAdmins")}
+                />
               </Field>
-              <Field label="Max staff" error={errors.maxStaff?.message} hint="Default: 50">
-                <Input type="number" min={1} placeholder="50" {...register("maxStaff")} />
+              <Field
+                label="Max staff"
+                error={errors.maxStaff?.message}
+                hint="Default: 50"
+              >
+                <Input
+                  type="number"
+                  min={1}
+                  placeholder="50"
+                  {...register("maxStaff")}
+                />
               </Field>
             </div>
-            <Field label="Subscription expiry date" error={errors.expiryDate?.message} required>
+            <div className="grid grid-cols-3 gap-4">
+              <Field
+                label="Daily Scan Limit"
+                error={errors.dailyLimit?.message}
+                hint="Default: 25"
+              >
+                <Input
+                  type="number"
+                  min={1}
+                  defaultValue={25}
+                  placeholder="25"
+                  {...register("dailyLimit")}
+                />
+              </Field>
+
+              <Field
+                label="Monthly Scan Limit"
+                error={errors.monthlyLimit?.message}
+                hint="Default: 500"
+              >
+                <Input
+                  type="number"
+                  min={1}
+                  defaultValue={500}
+                  placeholder="500"
+                  {...register("monthlyLimit")}
+                />
+              </Field>
+
+              <Field
+                label="Yearly Scan Limit"
+                error={errors.yearlyLimit?.message}
+                hint="Default: 5000"
+              >
+                <Input
+                  type="number"
+                  min={1}
+                  defaultValue={5000}
+                  placeholder="5000"
+                  {...register("yearlyLimit")}
+                />
+              </Field>
+            </div>
+            <Field
+              label="Subscription expiry date"
+              error={errors.expiryDate?.message}
+              required
+            >
               <Input type="date" {...register("expiryDate")} />
             </Field>
           </CardBody>
           <div className="flex justify-end gap-2 border-t border-ink-100 px-5 py-4">
             <Link to="/companies">
-              <Button type="button" variant="outline">Cancel</Button>
+              <Button type="button" variant="outline">
+                Cancel
+              </Button>
             </Link>
             <Button type="submit" isLoading={mutation.isPending}>
               <Building2 className="h-4 w-4" /> Create company

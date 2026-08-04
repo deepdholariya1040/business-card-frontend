@@ -4,13 +4,20 @@ import {
   IdCard,
   Building2,
   Users,
+  ShieldCheck,
   ScrollText,
   UserCircle,
 } from "lucide-react";
+
 import { ROLES } from "./roles.js";
 
-const { SUPER_ADMIN, MAIN_COMPANY_ADMIN, COMPANY_ADMIN, STAFF, NORMAL_USER } =
-  ROLES;
+const {
+  SUPER_ADMIN,
+  MAIN_COMPANY_ADMIN,
+  COMPANY_ADMIN,
+  STAFF,
+  NORMAL_USER,
+} = ROLES;
 
 // Sidebar navigation
 export const NAV_ITEMS = [
@@ -42,6 +49,12 @@ export const NAV_ITEMS = [
     label: "Users",
     to: "/users",
     icon: Users,
+    roles: [SUPER_ADMIN],
+  },
+  {
+    label: "Super Admins",
+    to: "/super-admins",
+    icon: ShieldCheck,
     roles: [SUPER_ADMIN],
   },
   {

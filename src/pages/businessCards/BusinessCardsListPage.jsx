@@ -81,33 +81,33 @@ export default function BusinessCardsListPage() {
    * URL createdBy filter has higher priority
    * than Member dropdown.
    */
-const {
-  data = [],
-  isLoading,
-  isError,
-} = useQuery({
-  queryKey: [
-    "business-cards",
-    debouncedSearch,
-    selectedCompany,
-    selectedRole,
-    selectedMember,
-    createdByFromUrl,
-  ],
-  queryFn: async () => {
-    const result = await fetchBusinessCards(
+  const {
+    data = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: [
+      "business-cards",
       debouncedSearch,
       selectedCompany,
       selectedRole,
-      createdByFromUrl || selectedMember
-    );
+      selectedMember,
+      createdByFromUrl,
+    ],
+    queryFn: async () => {
+      const result = await fetchBusinessCards(
+        debouncedSearch,
+        selectedCompany,
+        selectedRole,
+        createdByFromUrl || selectedMember,
+      );
 
-    console.log("URL createdBy:", createdByFromUrl);
-    console.log("API RESULT:", result);
+      console.log("URL createdBy:", createdByFromUrl);
+      console.log("API RESULT:", result);
 
-    return result;
-  },
-});
+      return result;
+    },
+  });
 
   const { pageItems, page, setPage, totalPages, total } = usePagination(
     data,
@@ -169,9 +169,9 @@ const {
       )}
 
       {/* Filters */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="flex flex-wrap items-center gap-4">
         {/* Search */}
-        <div className="relative xl:col-span-2">
+        <div className="relative flex-1 min-w-[350px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-300" />
 
           <Input
@@ -195,7 +195,7 @@ const {
               setSelectedMember("");
               setPage(1);
             }}
-            className="rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700 outline-none focus:border-signal"
+            className="w-60 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700 outline-none focus:border-signal"
           >
             <option value="">All Companies</option>
 
@@ -218,7 +218,7 @@ const {
               setSelectedMember("");
               setPage(1);
             }}
-            className="rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700 outline-none focus:border-signal"
+            className="w-52 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700 outline-none focus:border-signal"
           >
             <option value="">All Roles</option>
 
@@ -256,7 +256,7 @@ const {
               setSelectedMember(e.target.value);
               setPage(1);
             }}
-            className="rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700 outline-none focus:border-signal"
+            className="w-60 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700 outline-none focus:border-signal"
           >
             <option value="">All Members</option>
 

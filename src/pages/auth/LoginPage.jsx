@@ -38,18 +38,25 @@ export default function LoginPage() {
     return <Navigate to={location.state?.from?.pathname || "/dashboard"} replace />;
   }
 
-  const onSendOtp = async (values) => {
-    try {
-      const res = await sendLoginOtp(values);
-      setEmailForOtp(values.email);
-      setExpiresIn(res.data?.expiresInSeconds);
-      verifyForm.setValue("email", values.email);
-      setStep("otp");
-      toast.success(res.message || "Code sent to your email.");
-    } catch (err) {
-      toast.error(getErrorMessage(err));
+const onSendOtp = async (values) => {
+  try {
+    const res = await sendLoginOtp(values);
+
+    setEmailForOtp(values.email);
+    setExpiresIn(res.data?.expiresInSeconds);
+    verifyForm.setValue("email", values.email);
+    setStep("otp");
+
+    // Development only
+    if (res.data?.otp) {
+      alert(`Your OTP is: ${res.data.otp}`);
     }
-  };
+
+    toast.success(res.message || "Code sent to your email.");
+  } catch (err) {
+    toast.error(getErrorMessage(err));
+  }
+};
 
   const onVerifyOtp = async (values) => {
     try {

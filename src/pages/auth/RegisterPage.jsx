@@ -31,6 +31,10 @@ export default function RegisterPage() {
       setEmail(values.email);
       verifyForm.setValue("email", values.email);
       setStep("otp");
+        // Development only
+    if (res.data?.otp) {
+      alert(`Your OTP is: ${res.data.otp}`);
+    }``
       toast.success(res.message || "Verification code sent.");
     } catch (err) {
       toast.error(getErrorMessage(err));
